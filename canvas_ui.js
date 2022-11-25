@@ -39,10 +39,7 @@ let LastMouseY = 0;
 let LastSphVec = [1, 0, 0];
 
 // random grabbag of polyhedra
-const DEFAULT_RECIPES = [
-  "C2dakD", "oC20kkkT", "kn4C40A0dA4", "opD",
-  "lT", "lK5oC", "knD", "dn6x4K5bT", "oox4P7",
-  "qqJ37", "aobD", "qaxI", "SdStSuSkD", "SASuSASuI"];
+const DEFAULT_RECIPES = ["C2dakD", "oC20kkkT", "kn4C40A0dA4", "opD", "lK5oC", "knD", "oox4P7", "qqJ37", "aobD", "qaxI", "SdStSuSkD", "SASuSASuI"];
 
 // File-saving objects used to export txt/canvas-png
 const saveText = function(text, filename) {
