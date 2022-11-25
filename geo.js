@@ -14,8 +14,8 @@
 // ===================================================================================================
 
 // import math functions to local namespace
-const { random, round, floor, sqrt, 
-        sin, cos, tan, asin, acos, atan, 
+const { random, round, floor, sqrt,
+        sin, cos, tan, asin, acos, atan,
         abs, pow, log,
         PI, LN10
       } = Math;
@@ -47,7 +47,7 @@ const randomchoice = function(array){
 };
 
 // 3d scalar multiplication
-const mult = (c, vec) => 
+const mult = (c, vec) =>
   [c*vec[0], c*vec[1], c*vec[2]];
 
 // 2d scalar multiplication
@@ -55,25 +55,25 @@ const mult2d = (c, vec) =>
   [c*vec[0], c*vec[1]];
 
 // 3d element-wise multiply
-const _mult = (vec1, vec2) => 
+const _mult = (vec1, vec2) =>
   [vec1[0]*vec2[0], vec1[1]*vec2[1], vec1[2]*vec2[2]];
 
 // 3d vector addition
-const add = (vec1, vec2) => 
+const add = (vec1, vec2) =>
   [vec1[0]+vec2[0], vec1[1]+vec2[1], vec1[2]+vec2[2]];
 
 // 3d vector subtraction
-const sub = (vec1, vec2) => 
+const sub = (vec1, vec2) =>
   [vec1[0]-vec2[0], vec1[1]-vec2[1], vec1[2]-vec2[2]];
 
 // 3d dot product
-const dot = (vec1, vec2) => 
+const dot = (vec1, vec2) =>
   (vec1[0]*vec2[0]) + (vec1[1]*vec2[1]) + (vec1[2]*vec2[2]);
 
 // 3d cross product d1 x d2
-const cross = (d1, d2) => 
-  [(d1[1]*d2[2]) - (d1[2]*d2[1]), 
-   (d1[2]*d2[0]) - (d1[0]*d2[2]),  
+const cross = (d1, d2) =>
+  [(d1[1]*d2[2]) - (d1[2]*d2[1]),
+   (d1[2]*d2[0]) - (d1[0]*d2[2]),
    (d1[0]*d2[1]) - (d1[1]*d2[0]) ];
 
 // vector norm
@@ -89,9 +89,9 @@ const unit = vec => mult(1 / sqrt(mag2(vec)), vec);
 const midpoint = (vec1, vec2) => mult(1/2.0, add(vec1, vec2));
 
 // parametric segment between vec1, vec2 w. parameter t ranging from 0 to 1
-const tween = (vec1, vec2, t) => 
-  [((1-t)*vec1[0]) + (t*vec2[0]), 
-   ((1-t)*vec1[1]) + (t*vec2[1]), 
+const tween = (vec1, vec2, t) =>
+  [((1-t)*vec1[0]) + (t*vec2[0]),
+   ((1-t)*vec1[1]) + (t*vec2[1]),
    ((1-t)*vec1[2]) + (t*vec2[2])];
 
 // uses above to go one-third of the way along vec1->vec2 line
@@ -111,7 +111,7 @@ const edgeDist = (v1, v2) => sqrt(mag2(tangentPoint(v1, v2)));
 
 // square of distance from point v3 to line segment v1...v2
 // http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
-// calculates min distance from 
+// calculates min distance from
 // point v3 to finite line segment between v1 and v2
 const linePointDist2 = function(v1, v2, v3) {
   let result;
@@ -120,10 +120,10 @@ const linePointDist2 = function(v1, v2, v3) {
   const d23 = sub(v2, v3);
   const m2 = mag2(d21);
   const t = -dot(d13, d21)/m2;
-  if (t <= 0) { 
+  if (t <= 0) {
     // closest to point beyond v1, clip to |v3-v1|^2
     result = mag2(d13);
-  } else if (t >= 1) { 
+  } else if (t >= 1) {
     // closest to point beyond v2, clip to |v3-v2|^2
     result = mag2(d23);
   } else {
@@ -132,7 +132,7 @@ const linePointDist2 = function(v1, v2, v3) {
   }
   return result;
 };
-  
+
 // find vector orthogonal to plane of 3 pts
 // -- do the below algos assume this be normalized or not?
 const orthogonal = function(v1,v2,v3) {
@@ -335,7 +335,7 @@ const vec_rotm = function(angle, x, y, z) {
       const x2 = x*x;
       const y2 = y*y;
       const z2 = z*z;
-      m = 
+      m =
         [[1-(2*(y2+z2)*sinA2), 2*((x*y*sinA2)+(z*sinA*cosA)), 2*((x*z*sinA2)-(y*sinA*cosA))],
         [2*((y*x*sinA2)-(z*sinA*cosA)), 1-(2*(z2+x2)*sinA2), 2*((y*z*sinA2)+(x*sinA*cosA))],
         [2*((z*x*sinA2)+(y*sinA*cosA)), 2*((z*y*sinA2)-(x*sinA*cosA)), 1-(2*(x2+y2)*sinA2)]];
@@ -348,21 +348,21 @@ const vec_rotm = function(angle, x, y, z) {
 // scales perspective such that inside depth regions min_real_depth <--> max_real_depth
 // perspective lengths vary no more than:   desired_ratio
 // with target dimension of roughly length: desired_length
-const perspT = function(vec3, max_real_depth, min_real_depth, 
+const perspT = function(vec3, max_real_depth, min_real_depth,
                         desired_ratio, desired_length) {
-  const z0 = 
+  const z0 =
     ((max_real_depth * desired_ratio) - min_real_depth) / (1-desired_ratio);
-  const scalefactor = 
+  const scalefactor =
     (desired_length * desired_ratio) / (1-desired_ratio);
   // projected [X, Y]
   return [(scalefactor*vec3[0])/(vec3[2]+z0), (scalefactor*vec3[1])/(vec3[2]+z0)];
 };
 
 // Inverses perspective transform by projecting plane onto a unit sphere at origin
-const invperspT = 
-  function(x, y, dx, dy, max_real_depth, min_real_depth, 
+const invperspT =
+  function(x, y, dx, dy, max_real_depth, min_real_depth,
            desired_ratio, desired_length) {
-  const z0 = 
+  const z0 =
     ((max_real_depth * desired_ratio) - min_real_depth)/(1-desired_ratio);
   const s = (desired_length * desired_ratio)/(1-desired_ratio);
   const xp = x-dx;
@@ -372,11 +372,11 @@ const invperspT =
   const xp2 = xp*xp;
   const yp2 = yp*yp;
 
-  const xsphere = ((2*s*xp*z0) 
-                    + sqrt((4*s2*xp2*z02) 
+  const xsphere = ((2*s*xp*z0)
+                    + sqrt((4*s2*xp2*z02)
                     + (4*xp2*(s2+xp2+yp2)*(1-z02))))/(2.0*(s2+xp2+yp2));
-  const ysphere = (((s*yp*z0)/(s2+xp2+yp2)) 
-                   + ((yp*sqrt((4*s2*z02) 
+  const ysphere = (((s*yp*z0)/(s2+xp2+yp2))
+                   + ((yp*sqrt((4*s2*z02)
                    + (4*(s2+xp2+yp2)*(1-z02))))/(2.0*(s2+xp2+yp2))));
   const zsphere = sqrt(1 - (xsphere*xsphere) - (ysphere*ysphere));
 

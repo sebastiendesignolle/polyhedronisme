@@ -24,7 +24,7 @@
 //
 // A flag is similar in concept to a directed halfedge in halfedge data structures.
 //
-const MAX_FACE_SIDEDNESS = 1000; //GLOBAL
+const MAX_FACE_SIDEDNESS = 1000; // GLOBAL
 
 class polyflag {
   constructor() {
@@ -49,21 +49,19 @@ class polyflag {
   }
 
   topoly() {
-    let i, v;
+    let v;
     const poly = new polyhedron();
 
     let ctr = 0; // first number the vertices
-    for (i in this.vertidxs) {
-      v = this.vertidxs[i];
-      poly.vertices[ctr]=this.vertices[i]; // store in array
-      this.vertidxs[i] = ctr;
-      ctr++;
+    for (let vname in this.vertidxs) {
+      poly.vertices[ctr] = this.vertices[vname];
+      this.vertidxs[vname] = ctr++;
     }
 
     ctr = 0;
-    for (i in this.flags) {
+    for (let fname in this.flags) {
       var v0;
-      const face = this.flags[i];
+      const face = this.flags[fname];
       poly.faces[ctr] = []; // new face
       // grab _any_ vertex as starting point
       for (let j in face) {
@@ -72,16 +70,16 @@ class polyflag {
       }
       // build face out of all the edge relations in the flag assoc array
       v = v0; // v moves around face
-      poly.faces[ctr].push(this.vertidxs[v]); //record index
-      v = this.flags[i][v]; // goto next vertex
-      let faceCTR=0;
+      poly.faces[ctr].push(this.vertidxs[v]); // record index
+      v = this.flags[fname][v]; // goto next vertex
+      let faceCTR = 0;
       while (v !== v0) { // loop until back to start
         poly.faces[ctr].push(this.vertidxs[v]);
-        v = this.flags[i][v];
+        v = this.flags[fname][v];
         faceCTR++;
         // necessary during development to prevent browser hangs on badly formed flagsets
         if (faceCTR > MAX_FACE_SIDEDNESS) {
-          console.log("Bad flag spec, have a neverending face:", i, this.flags[i]);
+          console.log("Bad flag spec, have a neverending face:", fname, this.flags[fname]);
           break;
         }
       }
@@ -96,14 +94,16 @@ class polyflag {
 // ===================================================================================================
 // Polyhedron Operators
 // ===================================================================================================
+
 // for each vertex of new polyhedron:
 //     call newV(Vname, xyz) with a symbolic name and coordinates
 // for each flag of new polyhedron:
 //     call newFlag(Fname, Vname1, Vname2) with a symbolic name for the new face
-//     and the symbolic name for two vertices forming an oriented edge
+//     and the symbolic names for the two vertices forming an oriented edge
 // ORIENTATION -must- be dealt with properly to make a manifold (correct) mesh.
 // Specifically, no edge v1->v2 can ever be crossed in the -same direction- by
-// two different faces
+// two different faces - convention is to define each face with a clockwise set of
+// vertices.
 //
 // call topoly() to assemble flags into polyhedron structure by following the orbits
 // of the vertex mapping stored in the flagset for each new face
@@ -388,7 +388,8 @@ const dual = function(poly) {
 //
 // Q: what is the dual operation of chamfering? I.e.
 // if cX = dxdX, and xX = dcdX, what operation is x?
-
+// A: subdivision
+//
 // We could "almost" do this in terms of already-implemented operations:
 // cC = t4daC = t4jC, cO = t3daO, cD = t5daD, cI = t3daI
 // But it doesn't work for cases like T.
@@ -545,10 +546,10 @@ const quinto = function(poly){
 const insetN = function(poly, n, inset_dist, popout_dist){
   let f, i, v;
   if (!n) { n = 0; }
-  if (inset_dist===undefined) { inset_dist = 0.5; }
-  if (popout_dist===undefined) { popout_dist = -0.2; }
+  if (inset_dist === undefined) { inset_dist = 0.5; }
+  if (popout_dist === undefined) { popout_dist = -0.2; }
 
-  console.log(`Taking inset of ${n===0 ? "" : n}-sided faces of ${poly.name}...`);
+  console.log(`Taking inset of ${n === 0 ? "" : n}-sided faces of ${poly.name}...`);
 
   const flag = new polyflag();
   for (i = 0; i < poly.vertices.length; i++) {
@@ -559,12 +560,13 @@ const insetN = function(poly, n, inset_dist, popout_dist){
 
   const normals = poly.normals();
   const centers = poly.centers();
-  for (i = 0; i < poly.faces.length; i++) { //new inset vertex for every vert in face
+  for (i = 0; i < poly.faces.length; i++) { // new inset vertex for every vert in face
     f = poly.faces[i];
     if ((f.length === n) || (n === 0)) {
       for (v of f) {
-        flag.newV(`f${i}v${v}`, add(tween(poly.vertices[v],centers[i],inset_dist),
-                                    mult(popout_dist,normals[i])));
+        flag.newV(`f${i}v${v}`,
+          add(tween(poly.vertices[v], centers[i], inset_dist),
+            mult(popout_dist, normals[i])));
       }
     }
   }
@@ -582,12 +584,12 @@ const insetN = function(poly, n, inset_dist, popout_dist){
         flag.newFlag(fname,      v2,       `f${i}${v2}`);
         flag.newFlag(fname, `f${i}${v2}`,  `f${i}${v1}`);
         flag.newFlag(fname, `f${i}${v1}`,  v1);
-        //new inset, extruded face
+        // new inset, extruded face
         flag.newFlag(`ex${i}`, `f${i}${v1}`,  `f${i}${v2}`);
       } else {
         flag.newFlag(i, v1, v2);  // same old flag, if non-n
       }
-      v1=v2;
+      v1 = v2;
     }
   }  // current becomes previous
 
@@ -641,9 +643,10 @@ const hollow = function(poly, inset_dist, thickness){
   for (i = 0; i < poly.faces.length; i++) {
     f = poly.faces[i];
     for (v of f) {
-      flag.newV(`fin${i}v${v}`, tween(poly.vertices[v],centers[i],inset_dist));
-      flag.newV(`findown${i}v${v}`, add(tween(poly.vertices[v],centers[i],inset_dist),
-                                        mult(-1*thickness,normals[i])));
+      flag.newV(`fin${i}v${v}`, tween(poly.vertices[v], centers[i], inset_dist));
+      flag.newV(`findown${i}v${v}`,
+        add(tween(poly.vertices[v], centers[i], inset_dist),
+          mult(-1*thickness, normals[i])));
     }
   }
 
@@ -844,17 +847,17 @@ const perspectiva1 = function(poly){
       flag.newV(v12, midpoint( midpoint(vert1,vert2), centers[i] ));
 
       // inset Nface made of new, stellated points
-      flag.newFlag(`in${i}`,      v12,       v23);
+      flag.newFlag(`in${i}`,     v12, v23);
 
       // new tri face constituting the remainder of the stellated Nface
-      flag.newFlag(`f${i}${v2}`,      v23,      v12);
-      flag.newFlag(`f${i}${v2}`,       v12,      v2);
-      flag.newFlag(`f${i}${v2}`,      v2,      v23);
+      flag.newFlag(`f${i}${v2}`, v23, v12);
+      flag.newFlag(`f${i}${v2}`, v12,  v2);
+      flag.newFlag(`f${i}${v2}`,  v2, v23);
 
       // one of the two new triangles replacing old edge between v1->v2
-      flag.newFlag(`f${v12}`,     v1,        v21);
-      flag.newFlag(`f${v12}`,     v21,       v12);
-      flag.newFlag(`f${v12}`,      v12,       v1);
+      flag.newFlag(`f${v12}`,     v1, v21);
+      flag.newFlag(`f${v12}`,    v21, v12);
+      flag.newFlag(`f${v12}`,    v12,  v1);
 
       [v1, v2] = [v2, v3];  // current becomes previous
       [vert1, vert2] = [vert2, vert3];

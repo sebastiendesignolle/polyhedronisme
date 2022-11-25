@@ -14,8 +14,8 @@
 // ===================================================================================================
 
 // import math functions to local namespace
-const { random, round, floor, sqrt, 
-        sin, cos, tan, asin, acos, atan, 
+const { random, round, floor, sqrt,
+        sin, cos, tan, asin, acos, atan,
         abs, pow, log,
         PI, LN10
       } = Math;
@@ -47,7 +47,7 @@ const randomchoice = function(array){
 };
 
 // 3d scalar multiplication
-const mult = (c, vec) => 
+const mult = (c, vec) =>
   [c*vec[0], c*vec[1], c*vec[2]];
 
 // 2d scalar multiplication
@@ -55,25 +55,25 @@ const mult2d = (c, vec) =>
   [c*vec[0], c*vec[1]];
 
 // 3d element-wise multiply
-const _mult = (vec1, vec2) => 
+const _mult = (vec1, vec2) =>
   [vec1[0]*vec2[0], vec1[1]*vec2[1], vec1[2]*vec2[2]];
 
 // 3d vector addition
-const add = (vec1, vec2) => 
+const add = (vec1, vec2) =>
   [vec1[0]+vec2[0], vec1[1]+vec2[1], vec1[2]+vec2[2]];
 
 // 3d vector subtraction
-const sub = (vec1, vec2) => 
+const sub = (vec1, vec2) =>
   [vec1[0]-vec2[0], vec1[1]-vec2[1], vec1[2]-vec2[2]];
 
 // 3d dot product
-const dot = (vec1, vec2) => 
+const dot = (vec1, vec2) =>
   (vec1[0]*vec2[0]) + (vec1[1]*vec2[1]) + (vec1[2]*vec2[2]);
 
 // 3d cross product d1 x d2
-const cross = (d1, d2) => 
-  [(d1[1]*d2[2]) - (d1[2]*d2[1]), 
-   (d1[2]*d2[0]) - (d1[0]*d2[2]),  
+const cross = (d1, d2) =>
+  [(d1[1]*d2[2]) - (d1[2]*d2[1]),
+   (d1[2]*d2[0]) - (d1[0]*d2[2]),
    (d1[0]*d2[1]) - (d1[1]*d2[0]) ];
 
 // vector norm
@@ -89,9 +89,9 @@ const unit = vec => mult(1 / sqrt(mag2(vec)), vec);
 const midpoint = (vec1, vec2) => mult(1/2.0, add(vec1, vec2));
 
 // parametric segment between vec1, vec2 w. parameter t ranging from 0 to 1
-const tween = (vec1, vec2, t) => 
-  [((1-t)*vec1[0]) + (t*vec2[0]), 
-   ((1-t)*vec1[1]) + (t*vec2[1]), 
+const tween = (vec1, vec2, t) =>
+  [((1-t)*vec1[0]) + (t*vec2[0]),
+   ((1-t)*vec1[1]) + (t*vec2[1]),
    ((1-t)*vec1[2]) + (t*vec2[2])];
 
 // uses above to go one-third of the way along vec1->vec2 line
@@ -111,7 +111,7 @@ const edgeDist = (v1, v2) => sqrt(mag2(tangentPoint(v1, v2)));
 
 // square of distance from point v3 to line segment v1...v2
 // http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
-// calculates min distance from 
+// calculates min distance from
 // point v3 to finite line segment between v1 and v2
 const linePointDist2 = function(v1, v2, v3) {
   let result;
@@ -120,10 +120,10 @@ const linePointDist2 = function(v1, v2, v3) {
   const d23 = sub(v2, v3);
   const m2 = mag2(d21);
   const t = -dot(d13, d21)/m2;
-  if (t <= 0) { 
+  if (t <= 0) {
     // closest to point beyond v1, clip to |v3-v1|^2
     result = mag2(d13);
-  } else if (t >= 1) { 
+  } else if (t >= 1) {
     // closest to point beyond v2, clip to |v3-v2|^2
     result = mag2(d23);
   } else {
@@ -132,7 +132,7 @@ const linePointDist2 = function(v1, v2, v3) {
   }
   return result;
 };
-  
+
 // find vector orthogonal to plane of 3 pts
 // -- do the below algos assume this be normalized or not?
 const orthogonal = function(v1,v2,v3) {
@@ -335,7 +335,7 @@ const vec_rotm = function(angle, x, y, z) {
       const x2 = x*x;
       const y2 = y*y;
       const z2 = z*z;
-      m = 
+      m =
         [[1-(2*(y2+z2)*sinA2), 2*((x*y*sinA2)+(z*sinA*cosA)), 2*((x*z*sinA2)-(y*sinA*cosA))],
         [2*((y*x*sinA2)-(z*sinA*cosA)), 1-(2*(z2+x2)*sinA2), 2*((y*z*sinA2)+(x*sinA*cosA))],
         [2*((z*x*sinA2)+(y*sinA*cosA)), 2*((z*y*sinA2)-(x*sinA*cosA)), 1-(2*(x2+y2)*sinA2)]];
@@ -348,21 +348,21 @@ const vec_rotm = function(angle, x, y, z) {
 // scales perspective such that inside depth regions min_real_depth <--> max_real_depth
 // perspective lengths vary no more than:   desired_ratio
 // with target dimension of roughly length: desired_length
-const perspT = function(vec3, max_real_depth, min_real_depth, 
+const perspT = function(vec3, max_real_depth, min_real_depth,
                         desired_ratio, desired_length) {
-  const z0 = 
+  const z0 =
     ((max_real_depth * desired_ratio) - min_real_depth) / (1-desired_ratio);
-  const scalefactor = 
+  const scalefactor =
     (desired_length * desired_ratio) / (1-desired_ratio);
   // projected [X, Y]
   return [(scalefactor*vec3[0])/(vec3[2]+z0), (scalefactor*vec3[1])/(vec3[2]+z0)];
 };
 
 // Inverses perspective transform by projecting plane onto a unit sphere at origin
-const invperspT = 
-  function(x, y, dx, dy, max_real_depth, min_real_depth, 
+const invperspT =
+  function(x, y, dx, dy, max_real_depth, min_real_depth,
            desired_ratio, desired_length) {
-  const z0 = 
+  const z0 =
     ((max_real_depth * desired_ratio) - min_real_depth)/(1-desired_ratio);
   const s = (desired_length * desired_ratio)/(1-desired_ratio);
   const xp = x-dx;
@@ -372,11 +372,11 @@ const invperspT =
   const xp2 = xp*xp;
   const yp2 = yp*yp;
 
-  const xsphere = ((2*s*xp*z0) 
-                    + sqrt((4*s2*xp2*z02) 
+  const xsphere = ((2*s*xp*z0)
+                    + sqrt((4*s2*xp2*z02)
                     + (4*xp2*(s2+xp2+yp2)*(1-z02))))/(2.0*(s2+xp2+yp2));
-  const ysphere = (((s*yp*z0)/(s2+xp2+yp2)) 
-                   + ((yp*sqrt((4*s2*z02) 
+  const ysphere = (((s*yp*z0)/(s2+xp2+yp2))
+                   + ((yp*sqrt((4*s2*z02)
                    + (4*(s2+xp2+yp2)*(1-z02))))/(2.0*(s2+xp2+yp2))));
   const zsphere = sqrt(1 - (xsphere*xsphere) - (ysphere*ysphere));
 
@@ -6275,7 +6275,7 @@ const johnson = function(n) {
 //
 // A flag is similar in concept to a directed halfedge in halfedge data structures.
 //
-const MAX_FACE_SIDEDNESS = 1000; //GLOBAL
+const MAX_FACE_SIDEDNESS = 1000; // GLOBAL
 
 class polyflag {
   constructor() {
@@ -6300,21 +6300,19 @@ class polyflag {
   }
 
   topoly() {
-    let i, v;
+    let v;
     const poly = new polyhedron();
 
     let ctr = 0; // first number the vertices
-    for (i in this.vertidxs) {
-      v = this.vertidxs[i];
-      poly.vertices[ctr]=this.vertices[i]; // store in array
-      this.vertidxs[i] = ctr;
-      ctr++;
+    for (let vname in this.vertidxs) {
+      poly.vertices[ctr] = this.vertices[vname];
+      this.vertidxs[vname] = ctr++;
     }
 
     ctr = 0;
-    for (i in this.flags) {
+    for (let fname in this.flags) {
       var v0;
-      const face = this.flags[i];
+      const face = this.flags[fname];
       poly.faces[ctr] = []; // new face
       // grab _any_ vertex as starting point
       for (let j in face) {
@@ -6323,16 +6321,16 @@ class polyflag {
       }
       // build face out of all the edge relations in the flag assoc array
       v = v0; // v moves around face
-      poly.faces[ctr].push(this.vertidxs[v]); //record index
-      v = this.flags[i][v]; // goto next vertex
-      let faceCTR=0;
+      poly.faces[ctr].push(this.vertidxs[v]); // record index
+      v = this.flags[fname][v]; // goto next vertex
+      let faceCTR = 0;
       while (v !== v0) { // loop until back to start
         poly.faces[ctr].push(this.vertidxs[v]);
-        v = this.flags[i][v];
+        v = this.flags[fname][v];
         faceCTR++;
         // necessary during development to prevent browser hangs on badly formed flagsets
         if (faceCTR > MAX_FACE_SIDEDNESS) {
-          console.log("Bad flag spec, have a neverending face:", i, this.flags[i]);
+          console.log("Bad flag spec, have a neverending face:", fname, this.flags[fname]);
           break;
         }
       }
@@ -6347,14 +6345,16 @@ class polyflag {
 // ===================================================================================================
 // Polyhedron Operators
 // ===================================================================================================
+
 // for each vertex of new polyhedron:
 //     call newV(Vname, xyz) with a symbolic name and coordinates
 // for each flag of new polyhedron:
 //     call newFlag(Fname, Vname1, Vname2) with a symbolic name for the new face
-//     and the symbolic name for two vertices forming an oriented edge
+//     and the symbolic names for the two vertices forming an oriented edge
 // ORIENTATION -must- be dealt with properly to make a manifold (correct) mesh.
 // Specifically, no edge v1->v2 can ever be crossed in the -same direction- by
-// two different faces
+// two different faces - convention is to define each face with a clockwise set of
+// vertices.
 //
 // call topoly() to assemble flags into polyhedron structure by following the orbits
 // of the vertex mapping stored in the flagset for each new face
@@ -6639,7 +6639,8 @@ const dual = function(poly) {
 //
 // Q: what is the dual operation of chamfering? I.e.
 // if cX = dxdX, and xX = dcdX, what operation is x?
-
+// A: subdivision
+//
 // We could "almost" do this in terms of already-implemented operations:
 // cC = t4daC = t4jC, cO = t3daO, cD = t5daD, cI = t3daI
 // But it doesn't work for cases like T.
@@ -6796,10 +6797,10 @@ const quinto = function(poly){
 const insetN = function(poly, n, inset_dist, popout_dist){
   let f, i, v;
   if (!n) { n = 0; }
-  if (inset_dist===undefined) { inset_dist = 0.5; }
-  if (popout_dist===undefined) { popout_dist = -0.2; }
+  if (inset_dist === undefined) { inset_dist = 0.5; }
+  if (popout_dist === undefined) { popout_dist = -0.2; }
 
-  console.log(`Taking inset of ${n===0 ? "" : n}-sided faces of ${poly.name}...`);
+  console.log(`Taking inset of ${n === 0 ? "" : n}-sided faces of ${poly.name}...`);
 
   const flag = new polyflag();
   for (i = 0; i < poly.vertices.length; i++) {
@@ -6810,12 +6811,13 @@ const insetN = function(poly, n, inset_dist, popout_dist){
 
   const normals = poly.normals();
   const centers = poly.centers();
-  for (i = 0; i < poly.faces.length; i++) { //new inset vertex for every vert in face
+  for (i = 0; i < poly.faces.length; i++) { // new inset vertex for every vert in face
     f = poly.faces[i];
     if ((f.length === n) || (n === 0)) {
       for (v of f) {
-        flag.newV(`f${i}v${v}`, add(tween(poly.vertices[v],centers[i],inset_dist),
-                                    mult(popout_dist,normals[i])));
+        flag.newV(`f${i}v${v}`,
+          add(tween(poly.vertices[v], centers[i], inset_dist),
+            mult(popout_dist, normals[i])));
       }
     }
   }
@@ -6833,12 +6835,12 @@ const insetN = function(poly, n, inset_dist, popout_dist){
         flag.newFlag(fname,      v2,       `f${i}${v2}`);
         flag.newFlag(fname, `f${i}${v2}`,  `f${i}${v1}`);
         flag.newFlag(fname, `f${i}${v1}`,  v1);
-        //new inset, extruded face
+        // new inset, extruded face
         flag.newFlag(`ex${i}`, `f${i}${v1}`,  `f${i}${v2}`);
       } else {
         flag.newFlag(i, v1, v2);  // same old flag, if non-n
       }
-      v1=v2;
+      v1 = v2;
     }
   }  // current becomes previous
 
@@ -6892,9 +6894,10 @@ const hollow = function(poly, inset_dist, thickness){
   for (i = 0; i < poly.faces.length; i++) {
     f = poly.faces[i];
     for (v of f) {
-      flag.newV(`fin${i}v${v}`, tween(poly.vertices[v],centers[i],inset_dist));
-      flag.newV(`findown${i}v${v}`, add(tween(poly.vertices[v],centers[i],inset_dist),
-                                        mult(-1*thickness,normals[i])));
+      flag.newV(`fin${i}v${v}`, tween(poly.vertices[v], centers[i], inset_dist));
+      flag.newV(`findown${i}v${v}`,
+        add(tween(poly.vertices[v], centers[i], inset_dist),
+          mult(-1*thickness, normals[i])));
     }
   }
 
@@ -7095,17 +7098,17 @@ const perspectiva1 = function(poly){
       flag.newV(v12, midpoint( midpoint(vert1,vert2), centers[i] ));
 
       // inset Nface made of new, stellated points
-      flag.newFlag(`in${i}`,      v12,       v23);
+      flag.newFlag(`in${i}`,     v12, v23);
 
       // new tri face constituting the remainder of the stellated Nface
-      flag.newFlag(`f${i}${v2}`,      v23,      v12);
-      flag.newFlag(`f${i}${v2}`,       v12,      v2);
-      flag.newFlag(`f${i}${v2}`,      v2,      v23);
+      flag.newFlag(`f${i}${v2}`, v23, v12);
+      flag.newFlag(`f${i}${v2}`, v12,  v2);
+      flag.newFlag(`f${i}${v2}`,  v2, v23);
 
       // one of the two new triangles replacing old edge between v1->v2
-      flag.newFlag(`f${v12}`,     v1,        v21);
-      flag.newFlag(`f${v12}`,     v21,       v12);
-      flag.newFlag(`f${v12}`,      v12,       v1);
+      flag.newFlag(`f${v12}`,     v1, v21);
+      flag.newFlag(`f${v12}`,    v21, v12);
+      flag.newFlag(`f${v12}`,    v12,  v1);
 
       [v1, v2] = [v2, v3];  // current becomes previous
       [vert1, vert2] = [vert2, vert3];
