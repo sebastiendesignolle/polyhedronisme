@@ -7861,7 +7861,7 @@ const _2d_y_offset = CANVAS_HEIGHT/2;
 //let PALETTE;
 const BG_CLEAR = true; // clear background or colored?
 const BG_COLOR = "rgba(255,255,255,1.0)"; // background color
-let COLOR_METHOD = "inradius"; // "area", "edges", "signature"
+let COLOR_METHOD = "inradius"; // "area", "edges", "signature", "inradius"
 let COLOR_SENSITIVITY = 6; // color sensitivity to variation
                            // in congruence signature or planar area
 const ctx_linewidth = 0.5; // for outline of faces
