@@ -1,5 +1,5 @@
 // Polyhédronisme
-//===================================================================================================
+// ===================================================================================================
 //
 // A toy for constructing and manipulating polyhedra and other meshes
 //
@@ -8,7 +8,7 @@
 //
 
 // Polyhedra Functions
-//===================================================================================================
+// ===================================================================================================
 //
 // Set of routines for transforming N-face meshes into triangular meshes, necessary for exporting
 // STL or VRML for 3D Printing.
@@ -225,7 +225,7 @@ const triangulate = function(poly, colors){
     if (f.length > 3) {
       const TwoDface = project2dface(f.map((v) => poly.vertices[v]));
       const diags = getDiagonals(TwoDface);
-      const tris  = diagsToTris(f,diags);
+      const tris = diagsToTris(f, diags);
       for (let j = 0; j < tris.length; j++) {
         const tri = tris[j];
         newpoly.faces.push([ f[tri[0]], f[tri[1]], f[tri[2]] ]);

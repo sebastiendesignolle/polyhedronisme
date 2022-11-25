@@ -18,7 +18,7 @@ function __range__(left, right, inclusive) {
 }
 
 // Polyhedra Functions
-//=================================================================================================
+// =================================================================================================
 //
 // Topology stored as set of faces.  Each face is list of n vertex indices
 // corresponding to one oriented, n-sided face.  Vertices listed clockwise as seen from outside.
@@ -46,7 +46,7 @@ const vertColors = function(poly) {
 };
 
 // Polyhedra Coloring Functions
-//=================================================================================================
+// =================================================================================================
 const rwb_palette = ["#ff7777", "#dddddd", "#889999", "#fff0e5",
                      "#aa3333", "#ff0000", "#ffffff", "#aaaaaa"];
 let PALETTE = rwb_palette;  // GLOBAL
@@ -117,7 +117,7 @@ const rndcolors = function(){
 // color the faces of the polyhedra for display
 const paintPolyhedron = function(poly) {
   poly.face_classes = [];
-  const colormemory={};
+  const colormemory = {};
 
   // memorized color assignment to faces of similar areas
   const colorassign = function(hash, colormemory) {
@@ -135,11 +135,11 @@ const paintPolyhedron = function(poly) {
     var clr, face_verts;
     if (COLOR_METHOD === "area") {
       // color by face planar area assuming flatness
-      face_verts = f.map(v=>poly.vertices[v])
+      face_verts = f.map(v => poly.vertices[v])
       clr = colorassign(sigfigs(planararea(face_verts), COLOR_SENSITIVITY), colormemory);
     } else if (COLOR_METHOD === "signature") {
       // color by congruence signature
-      face_verts = f.map(v=>poly.vertices[v])
+      face_verts = f.map(v => poly.vertices[v])
       clr = colorassign(faceSignature(face_verts, COLOR_SENSITIVITY), colormemory);
     } else if (COLOR_METHOD === "inradius") {
       // color by inradius
@@ -235,6 +235,15 @@ class polyhedron {
       normalsArray.push(normal(face.map(vidx => this.vertices[vidx])));
     }
     return normalsArray;
+  }
+
+  // get array of array of vertices in faces
+  faceVerts() {
+    const vertsArray = [];
+    for (let face of this.faces) {
+      vertsArray.push(face.map(vidx => this.vertices[vidx]));
+    }
+    return vertsArray;
   }
 
   // informative string
@@ -464,9 +473,9 @@ coordIndex
   }
 }
 
-//===================================================================================================
+// ===================================================================================================
 // Primitive Polyhedra Seeds
-//===================================================================================================
+// ===================================================================================================
 
 const tetrahedron = function() {
   const poly = new polyhedron();
@@ -534,7 +543,7 @@ const dodecahedron = function() {
 const prism = function(n) {
   let i;
   const theta = (2*PI)/n; // pie angle
-  const h = Math.sin(theta/2); // half-edge
+  const h = sin(theta/2); // half-edge
   let poly = new polyhedron();
   poly.name = `P${n}`;
 
@@ -704,3 +713,23 @@ const anticupola = function(n, alpha, height) {
 
   return poly;
 }
+
+const Qgrid = function(n) {
+  let i, j;
+  let poly = new polyhedron();
+  poly.name = `Q${n}`;
+
+  for (i = 0; i < n; i++) { // vertex #'s 0...n-1 around one face
+    for (j = 0; j < n; j++) { // vertex #'s 0...n-1 around one face
+      poly.vertices.push([n / 2 - i, n / 2 - j, 0 ]);
+    }
+  }
+
+  for (i = 0; i < n - 1; i++) { // vertex #'s 0...n-1 around one face
+    for (j = 0; j < n - 1; j++) { // vertex #'s 0...n-1 around one face
+      poly.faces.push([i * n + j, i * n + j + 1, (i + 1) * n + j + 1, (i + 1) * n + j]);
+    }
+  }
+  // poly = canonicalXYZ(poly, 3);
+  return poly;
+};

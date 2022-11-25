@@ -1,5 +1,5 @@
 // Polyhédronisme
-//===================================================================================================
+// ===================================================================================================
 //
 // A toy for constructing and manipulating polyhedra and other meshes
 //
@@ -57,6 +57,7 @@ const basemap = {
   "J": johnson,   //takes integer arg
   "U": cupola,    //takes integer arg
   "V": anticupola,    //takes integer arg
+  'Q': Qgrid,  // takes integer arg
 };
 
 const opmap = {
@@ -75,6 +76,9 @@ const opmap = {
   "q": quinto,
   "u": trisub,
   //z --> zip
+  'L': lace,
+  "I": joinlace, // change symbol...
+  "K": stake,
   "H": hollow,
   "Z": triangulate,
   "C": canonicalize,

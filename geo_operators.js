@@ -1,5 +1,5 @@
 // Polyhédronisme
-//===================================================================================================
+// ================================================================================================
 //
 // A toy for constructing and manipulating polyhedra and other meshes
 //
@@ -11,9 +11,9 @@
 // Released under the MIT License
 
 
-//===================================================================================================
+// ================================================================================================
 // Canonicalization Algorithms
-//===================================================================================================
+// ================================================================================================
 
 // Slow Canonicalization Algorithm
 // ----------------------------------------------------------------
@@ -86,42 +86,42 @@ const planarize = function(vertices, faces) {
       n = mult(-1.0, n);
     }
     for (v of f) {  // project (vertex - centroid) onto normal, subtract off this component
-      newVs[v] = add(newVs[v],
-                     mult(dot(mult(STABILITY_FACTOR, n), sub(c, vertices[v])), n));
+      newVs[v] =
+      sub(newVs[v],
+        mult(dot(mult(STABILITY_FACTOR, n), sub(vertices[v], c)), n));
     }
   }
   return newVs;
 };
 
 // combines above three constraint adjustments in iterative cycle
-const canonicalize = function(poly, Niter) {
-  if (!Niter) {
-    Niter = 1;
-  }
+const canonicalize = function (poly, Niter, keepflat) {
+  if (Niter === undefined) { Niter = 1; }
+  if (keepflat === undefined) { keepflat = 0; }
+
   console.log(`Canonicalizing ${poly.name}...`);
   const faces = poly.faces;
   const edges = poly.edges();
   let newVs = poly.vertices;
   let maxChange = 1.0; // convergence tracker
   for (let i = 0; i <= Niter; i++) {
-    const oldVs = copyVecArray(newVs); //copy vertices
-    newVs = tangentify(newVs, edges);
+    const oldVs = copyVecArray(newVs); // copy vertices
+    if (keepflat === 0) {
+      newVs = tangentify(newVs, edges);
+    }
     newVs = recenter(newVs, edges);
     newVs = planarize(newVs, faces);
-    maxChange = _.max(_.map(_.zip(newVs, oldVs),
-                            ([x, y])=>mag(sub(x, y))
-                            ));
+    maxChange = _.max(_.map(_.zip(newVs, oldVs), ([x, y]) => mag(sub(x, y))));
     if (maxChange < 1e-8) {
       break;
     }
   }
   // one should now rescale, but not rescaling here makes for very interesting numerical
   // instabilities that make interesting mutants on multiple applications...
-  // more experience will tell what to do
-  //newVs = rescale(newVs)
+  newVs = rescale(newVs)
   console.log(`[canonicalization done, last |deltaV|=${maxChange}]`);
   const newpoly = new polyhedron(newVs, poly.faces, poly.name);
-  console.log("canonicalize" , newpoly);
+  console.log('canonicalize', newpoly);
   return newpoly;
 };
 

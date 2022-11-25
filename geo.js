@@ -1,5 +1,5 @@
 // Polyhédronisme
-//===================================================================================================
+// ===================================================================================================
 //
 // A toy for constructing and manipulating polyhedra and other meshes
 //
@@ -10,9 +10,8 @@
 // Copyright 2019, Anselm Levskaya
 // Released under the MIT License
 
-
 // Math / Vector / Matrix Functions
-//===================================================================================================
+// ===================================================================================================
 
 // import math functions to local namespace
 const { random, round, floor, sqrt, 
@@ -50,6 +49,10 @@ const randomchoice = function(array){
 // 3d scalar multiplication
 const mult = (c, vec) => 
   [c*vec[0], c*vec[1], c*vec[2]];
+
+// 2d scalar multiplication
+const mult2d = (c, vec) =>
+  [c*vec[0], c*vec[1]];
 
 // 3d element-wise multiply
 const _mult = (vec1, vec2) => 
@@ -166,10 +169,21 @@ const calcCentroid = function(vertices) {
   return mult(1 / vertices.length, centroidV );
 };
 
+// calculate centroid of array of vertices in 2d
+const calcCentroid2d = function (vertices) {
+  // running sum of vertex coords
+  let centroidV = [0, 0];
+  for (let v of vertices) {
+    centroidV = add2d(centroidV, v);
+  }
+  return mult2d(1 / vertices.length, centroidV);
+};
+
+
 // calculate average normal vector for array of vertices
 const normal = function(vertices) {
   // running sum of normal vectors
-  let normalV = [0,0,0]; 
+  let normalV = [0, 0, 0];
   let [v1, v2] = vertices.slice(-2);
   for (let v3 of vertices) {
     normalV = add(normalV, orthogonal(v1, v2, v3));
@@ -182,13 +196,25 @@ const normal = function(vertices) {
 // this assumes planarity.
 const planararea = function(vertices) {
   let area = 0.0;
-  let vsum = [0.,0.,0.];
+  let vsum = [0.0, 0.0, 0.0];
   let [v1, v2] = vertices.slice(-2);
   for (let v3 of vertices) {
     vsum = add(vsum, cross(v1, v2));
     [v1, v2] = [v2, v3];
   }
   area = abs(dot(normal(vertices), vsum) / 2.0);
+  return area;
+};
+
+const planararea2d = function (vertices) {
+  let area = 0.0;
+  let vsum = 0.0;
+  let [v1, v2] = vertices.slice(-2);
+  for (let v3 of vertices) {
+    vsum += cross2d(v1, v2);
+    [v1, v2] = [v2, v3];
+  }
+  area = abs(vsum / 2.0);
   return area;
 };
 
@@ -279,7 +305,6 @@ const rotm = function(phi,theta,psi){
   return mm3(xz_mat, mm3(yz_mat,xy_mat));
 };
 
-
 // Rotation Matrix defined by rotation about (unit) axis [x,y,z] for angle radians
 const vec_rotm = function(angle, x, y, z) {
   let m;
@@ -363,4 +388,32 @@ const getVec2VecRotM = function(vec1, vec2){
   const axis  = cross(vec1, vec2);
   const angle = acos(dot(vec1, vec2));
   return vec_rotm(-1*angle, axis[0], axis[1], axis[2]);
+};
+
+// 2d point inclusion in 2d poly by winding number
+// see http://geomalgorithms.com/a03-_inclusion.html
+const pointInPolygon = function (point, vs) {
+  const [ x, y ] = point;
+  let wn = 0;
+  const isLeft = function (P0, P1, P2) {
+    return (P1[0] - P0[0]) * (P2[1] - P0[1]) - (P2[0] - P0[0]) * (P1[1] - P0[1]);
+  }
+  for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+    const [ xi, yi ] = vs[i];
+    const [ xj, yj ] = vs[j];
+    if (yj <= y) { // <= orig
+      if (yi > y) {
+        if (isLeft([xj, yj], [xi, yi], [x, y]) > 0) {
+          wn++;
+        }
+      }
+    } else {
+      if (yi <= y) { // <= orig
+        if (isLeft([xj, yj], [xi, yi], [x, y]) < 0) {
+          wn--;
+        }
+      }
+    }
+  }
+  return wn !== 0;
 };
