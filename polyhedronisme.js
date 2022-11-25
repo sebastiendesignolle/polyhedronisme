@@ -420,7 +420,7 @@ const palette = function(n) {
   const k = n % PALETTE.length;
   return hextofloats(PALETTE[k])
 };
-                     
+
 // converts [h,s,l] float args to [r,g,b] list
 function hsl2rgb(h, s, l) {
   let r, g, b;
@@ -480,12 +480,12 @@ const rndcolors = function(){
 }
 
 
-// Color the faces of the polyhedra for display
+// color the faces of the polyhedra for display
 const paintPolyhedron = function(poly) {
   poly.face_classes = [];
   const colormemory={};
 
-  // memoized color assignment to faces of similar areas
+  // memorized color assignment to faces of similar areas
   const colorassign = function(hash, colormemory) {
     //const hash = ar;
     if (hash in colormemory) {
@@ -507,6 +507,10 @@ const paintPolyhedron = function(poly) {
       // color by congruence signature
       face_verts = f.map(v=>poly.vertices[v])
       clr = colorassign(faceSignature(face_verts, COLOR_SENSITIVITY), colormemory);
+    } else if (COLOR_METHOD === "inradius") {
+      // color by inradius
+      face_verts = f.map(v=>poly.vertices[v])
+      clr = colorassign(sigfigs(dot(normal(face_verts), face_verts[0])/mag(normal(face_verts)), COLOR_SENSITIVITY), colormemory);
     } else {
       // color by face-sidedness
       clr = f.length - 3;
@@ -556,7 +560,7 @@ class polyhedron {
     this.vertices  = verts || new Array();
     this.name = name  || "null polyhedron";
   }
-  
+
   // return a non-redundant list of the polyhedron's edges
   edges() {
     let e, a, b;
@@ -574,7 +578,7 @@ class polyhedron {
     }
     return _.values(uniqEdges);
   }
-      
+
   // get array of face centers
   centers() {
     const centersArray = [];
@@ -602,17 +606,19 @@ class polyhedron {
   // informative string
   data() {
     const nEdges = (this.faces.length + this.vertices.length) - 2; // E = V + F - 2
-    return `${this.faces.length} faces, ${nEdges} edges, ${this.vertices.length} vertices`;
+    return `${this.faces.length} faces, ${nEdges} edges, ${this.vertices.length} vertices (${this.vertices.length/2})`;
   }
 
   moreData() {
-    return `min edge length ${this.minEdgeLength().toPrecision(2)}<br>` +
-           `min face radius ${this.minFaceRadius().toPrecision(2)}`;
+    // return `min edge length ${this.minEdgeLength().toPrecision(4)}<br>` +
+           // `min face radius ${this.minFaceRadius().toPrecision(4)}<br>` +
+           // `polyhedron center ${this.magCenter().toPrecision(4)}<br>` +
+    return `inradius ${this.inradius().toPrecision(6)} (${(cos(PI/(sqrt(2*this.vertices.length)))**2).toPrecision(6)})`;
   }
 
   minEdgeLength() {
     let min2 = Number.MAX_VALUE;
-    // Compute minimum edge length
+    // compute minimum edge length
     for (let e of this.edges()) {
       // square of edge length
       const d2 = mag2(sub(this.vertices[e[0]], this.vertices[e[1]]));
@@ -620,10 +626,10 @@ class polyhedron {
         min2 = d2;
       }
     }
-    // This is normalized if rescaling has happened.
-    return sqrt(min2); 
+    // this is normalized if rescaling has happened.
+    return sqrt(min2);
   }
-    
+
   minFaceRadius() {
     let min2 = Number.MAX_VALUE;
     const nFaces = this.faces.length;
@@ -639,6 +645,27 @@ class polyhedron {
       }
     }
     return sqrt(min2);
+  }
+
+  magCenter() {
+    let polycenter = [0, 0, 0];
+    // sum centers to find center of gravity
+    for (let v of this.vertices) {
+      polycenter = add(polycenter, v);
+    }
+    return mag(polycenter);
+  }
+
+  inradius() {
+    let shr = Number.MAX_VALUE;
+    for (let f of this.faces) {
+      const norm = normal(f.map(v=>this.vertices[v]))
+      const s = dot(norm, this.vertices[f[0]])/mag(norm)
+      if (s < shr) {
+        shr = s;
+      }
+    }
+    return shr;
   }
 
   // Export / Formatting Routines --------------------------------------------------
@@ -819,7 +846,7 @@ const octahedron = function() {
   const poly = new polyhedron();
   poly.name = "O";
   poly.faces = [ [0,1,2], [0,2,3], [0,3,4], [0,4,1], [1,4,5], [1,5,2], [2,5,3], [3,5,4] ];
-  poly.vertices  = [ [0,0,1.414], [1.414,0,0], [0,1.414,0], [-1.414,0,0], [0,-1.414,0], [0,0,-1.414] ];
+  poly.vertices  = [ [0,0,1.4142135623730951], [1.4142135623730951,0,0], [0,1.4142135623730951,0], [-1.4142135623730951,0,0], [0,-1.4142135623730951,0], [0,0,-1.4142135623730951] ];
   return poly;
 };
 
@@ -827,8 +854,8 @@ const cube = function() {
   const poly = new polyhedron();
   poly.name = "C";
   poly.faces = [ [3,0,1,2], [3,4,5,0], [0,5,6,1], [1,6,7,2], [2,7,4,3], [5,4,7,6] ];
-  poly.vertices  = [ [0.707,0.707,0.707], [-0.707,0.707,0.707], [-0.707,-0.707,0.707], [0.707,-0.707,0.707],
-                [0.707,-0.707,-0.707], [0.707,0.707,-0.707], [-0.707,0.707,-0.707], [-0.707,-0.707,-0.707] ];
+  poly.vertices  = [ [0.7071067811865475,0.7071067811865475,0.7071067811865475], [-0.7071067811865475,0.7071067811865475,0.7071067811865475], [-0.7071067811865475,-0.7071067811865475,0.7071067811865475], [0.7071067811865475,-0.7071067811865475,0.7071067811865475],
+                [0.7071067811865475,-0.7071067811865475,-0.7071067811865475], [0.7071067811865475,0.7071067811865475,-0.7071067811865475], [-0.7071067811865475,0.7071067811865475,-0.7071067811865475], [-0.7071067811865475,-0.7071067811865475,-0.7071067811865475] ];
   return poly;
 };
 
@@ -841,12 +868,12 @@ const icosahedron = function() {
     [4,9,10], [4,10,5], [5,10,7], [6,7,11],
     [6,11,8], [7,10,11], [8,11,9], [9,11,10] ];
 
-  poly.vertices = [ [0,0,1.176], [1.051,0,0.526],
-    [0.324,1.0,0.525], [-0.851,0.618,0.526],
-    [-0.851,-0.618,0.526], [0.325,-1.0,0.526],
-    [0.851,0.618,-0.526], [0.851,-0.618,-0.526],
-    [-0.325,1.0,-0.526], [-1.051,0,-0.526],
-    [-0.325,-1.0,-0.526], [0,0,-1.176] ];
+  poly.vertices = [ [0,0,1.1755705045849463], [1.0514622242382672,0,0.5257311121191336],
+    [0.32491969623290634,1.0,0.5257311121191336], [-0.85065080835204,0.6180339887498949,0.5257311121191336],
+    [-0.85065080835204,-0.6180339887498949,0.5257311121191336], [0.32491969623290634,-1.0,0.5257311121191336],
+    [0.85065080835204,0.6180339887498949,-0.5257311121191336], [0.85065080835204,-0.6180339887498949,-0.5257311121191336],
+    [-0.32491969623290634,1.0,-0.5257311121191336], [-1.0514622242382672,0,-0.5257311121191336],
+    [-0.32491969623290634,-1.0,-0.5257311121191336], [0,0,-1.1755705045849463] ];
   return poly;
 };
 
@@ -857,16 +884,16 @@ const dodecahedron = function() {
       [1,5,11,10,4], [2,7,13,12,6], [3,9,15,14,8],
       [4,10,16,13,7], [5,8,14,17,11], [6,12,18,15,9],
       [10,11,17,19,16], [12,13,16,19,18], [14,15,18,19,17] ];
-   poly.vertices = [ [0,0,1.07047], [0.713644,0,0.797878],
-      [-0.356822,0.618,0.797878], [-0.356822,-0.618,0.797878],
-      [0.797878,0.618034,0.356822], [0.797878,-0.618,0.356822],
-      [-0.934172,0.381966,0.356822], [0.136294,1.0,0.356822],
-      [0.136294,-1.0,0.356822], [-0.934172,-0.381966,0.356822],
-      [0.934172,0.381966,-0.356822], [0.934172,-0.381966,-0.356822],
-      [-0.797878,0.618,-0.356822], [-0.136294,1.0,-0.356822],
-      [-0.136294,-1.0,-0.356822], [-0.797878,-0.618034,-0.356822],
-      [0.356822,0.618,-0.797878], [0.356822,-0.618,-0.797878],
-      [-0.713644,0,-0.797878], [0,0,-1.07047] ];
+   poly.vertices = [ [0,0,1.0704662693192697], [0.7136441795461799,0,0.7978784486061616],
+      [-0.35682208977308993,0.6180339887498949,0.7978784486061616], [-0.35682208977308993,-0.6180339887498949,0.7978784486061616],
+      [0.7978784486061616,0.6180339887498949,0.35682208977308993], [0.7978784486061616,-0.6180339887498949,0.35682208977308993],
+      [-0.9341723589627158,0.38196601125010515,0.35682208977308993], [0.1362939103565541,1.0,0.35682208977308993],
+      [0.1362939103565541,-1.0,0.35682208977308993], [-0.9341723589627158,-0.38196601125010515,0.35682208977308993],
+      [0.9341723589627158,0.38196601125010515,-0.35682208977308993], [0.9341723589627158,-0.38196601125010515,-0.35682208977308993],
+      [-0.7978784486061616,0.6180339887498949,-0.35682208977308993], [-0.1362939103565541,1.0,-0.35682208977308993],
+      [-0.1362939103565541,-1.0,-0.35682208977308993], [-0.7978784486061616,-0.6180339887498949,-0.35682208977308993],
+      [0.35682208977308993,0.6180339887498949,-0.7978784486061616], [0.35682208977308993,-0.6180339887498949,-0.7978784486061616],
+      [-0.7136441795461799,0,-0.7978784486061616], [0,0,-1.0704662693192697] ];
    return poly;
  };
 
@@ -958,11 +985,11 @@ const cupola = function(n, alpha, height) {
   }
 
   let s = 1.0;
-  // alternative face/height scaling 
+  // alternative face/height scaling
   //let rb = s / 2 / sin(PI / 2 / n - alpha);
   let rb = s / 2 / sin(PI / 2 / n);
   let rt = s / 2 / sin(PI / n);
-  if (height===undefined) { 
+  if (height===undefined) {
     height = (rb - rt);
     // set correct height for regularity for n=3,4,5
     if (2 <= n && n <= 5) {
@@ -975,17 +1002,17 @@ const cupola = function(n, alpha, height) {
   }
   // fill vertices
   for (i = 0; i < n; i++) {
-    poly.vertices[2*i] = [rb * cos(PI*(2*i)/n + PI/2/n+alpha), 
+    poly.vertices[2*i] = [rb * cos(PI*(2*i)/n + PI/2/n+alpha),
                           rb * sin(PI*(2*i)/n + PI/2/n+alpha),
                           0.0];
-    poly.vertices[2*i+1] = [rb * cos(PI*(2*i+1)/n + PI/2/n-alpha), 
-                            rb * sin(PI*(2*i+1)/n + PI/2/n-alpha), 
+    poly.vertices[2*i+1] = [rb * cos(PI*(2*i+1)/n + PI/2/n-alpha),
+                            rb * sin(PI*(2*i+1)/n + PI/2/n-alpha),
                             0.0];
-    poly.vertices[2*n+i] = [rt * cos(2*PI*i/n), 
-                            rt * sin(2*PI*i/n), 
+    poly.vertices[2*n+i] = [rt * cos(2*PI*i/n),
+                            rt * sin(2*PI*i/n),
                             height];
   }
-  
+
   poly.faces.push(__range__(2*n-1, 0, true)); // base
   poly.faces.push(__range__(2*n, 3*n-1, true)); // top
   for (i = 0; i < n; i++) { // n triangular sides and n square sides
@@ -993,7 +1020,7 @@ const cupola = function(n, alpha, height) {
     poly.faces.push([2*i, (2*i+1)%(2*n), 2*n+(i+1)%n, 2*n+i]);
   }
 
-  return poly;  
+  return poly;
 }
 
 const anticupola = function(n, alpha, height) {
@@ -1009,11 +1036,11 @@ const anticupola = function(n, alpha, height) {
   }
 
   let s = 1.0;
-  // alternative face/height scaling 
+  // alternative face/height scaling
   //let rb = s / 2 / sin(PI / 2 / n - alpha);
   let rb = s / 2 / sin(PI / 2 / n);
   let rt = s / 2 / sin(PI / n);
-  if (height===undefined) { 
+  if (height===undefined) {
     height = (rb - rt);
   }
   // init 3N vertices
@@ -1022,17 +1049,17 @@ const anticupola = function(n, alpha, height) {
   }
   // fill vertices
   for (i = 0; i < n; i++) {
-    poly.vertices[2*i] = [rb * cos(PI*(2*i)/n + alpha), 
+    poly.vertices[2*i] = [rb * cos(PI*(2*i)/n + alpha),
                           rb * sin(PI*(2*i)/n + alpha),
                           0.0];
-    poly.vertices[2*i+1] = [rb * cos(PI*(2*i+1)/n - alpha), 
-                            rb * sin(PI*(2*i+1)/n - alpha), 
+    poly.vertices[2*i+1] = [rb * cos(PI*(2*i+1)/n - alpha),
+                            rb * sin(PI*(2*i+1)/n - alpha),
                             0.0];
-    poly.vertices[2*n+i] = [rt * cos(2*PI*i/n), 
-                            rt * sin(2*PI*i/n), 
+    poly.vertices[2*n+i] = [rt * cos(2*PI*i/n),
+                            rt * sin(2*PI*i/n),
                             height];
   }
-  
+
   poly.faces.push(__range__(2*n-1, 0, true)); // base
   poly.faces.push(__range__(2*n, 3*n-1, true)); // top
   for (i = 0; i < n; i++) { // n triangular sides and n square sides
@@ -1041,8 +1068,9 @@ const anticupola = function(n, alpha, height) {
     poly.faces.push([2*n+(i+1)%n, 2*n+(i)%n, (2*i+1)%(2*n)]);
   }
 
-  return poly;  
-}// Polyhédronisme
+  return poly;
+}
+// Polyhédronisme
 //===================================================================================================
 //
 // A toy for constructing and manipulating polyhedra and other meshes
@@ -6998,7 +7026,7 @@ const trisub = function(poly, n) {
 // adjusts vertices on edges such that each edge is tangent to an origin sphere
 const tangentify = function(vertices, edges) {
   // hack to improve convergence
-  const STABILITY_FACTOR = 0.1; 
+  const STABILITY_FACTOR = 0.1;
   // copy vertices
   const newVs = copyVecArray(vertices);
   for (let e of edges) {
@@ -7018,7 +7046,7 @@ const recenter = function(vertices, edges) {
   const edgecenters = edges.map(([a, b])=>tangentPoint(vertices[a], vertices[b]));
   let polycenter = [0, 0, 0];
   // sum centers to find center of gravity
-  for (let v of edgecenters) { 
+  for (let v of edgecenters) {
     polycenter = add(polycenter, v);
   }
   polycenter = mult(1/edges.length, polycenter);
@@ -7034,6 +7062,12 @@ const rescale = function(vertices) {
   return _.map(vertices, x=>[s*x[0], s*x[1], s*x[2]]);
 };
 
+// rescales all vertices of polyhedron to 1
+const sphere = function(vertices) {
+  const polycenter = [0, 0, 0];
+  return _.map(vertices, x=>[x[0]/mag(x), x[1]/mag(x), x[2]/mag(x)]);
+};
+
 // adjusts vertices in each face to improve its planarity
 const planarize = function(vertices, faces) {
   let v;
@@ -7047,7 +7081,7 @@ const planarize = function(vertices, faces) {
       n = mult(-1.0, n);
     }
     for (v of f) {  // project (vertex - centroid) onto normal, subtract off this component
-      newVs[v] = add(newVs[v], 
+      newVs[v] = add(newVs[v],
                      mult(dot(mult(STABILITY_FACTOR, n), sub(c, vertices[v])), n));
     }
   }
@@ -7056,7 +7090,7 @@ const planarize = function(vertices, faces) {
 
 // combines above three constraint adjustments in iterative cycle
 const canonicalize = function(poly, Niter) {
-  if (!Niter) { 
+  if (!Niter) {
     Niter = 1;
   }
   console.log(`Canonicalizing ${poly.name}...`);
@@ -7069,7 +7103,7 @@ const canonicalize = function(poly, Niter) {
     newVs = tangentify(newVs, edges);
     newVs = recenter(newVs, edges);
     newVs = planarize(newVs, faces);
-    maxChange = _.max(_.map(_.zip(newVs, oldVs), 
+    maxChange = _.max(_.map(_.zip(newVs, oldVs),
                             ([x, y])=>mag(sub(x, y))
                             ));
     if (maxChange < 1e-8) {
@@ -7139,7 +7173,6 @@ const canonicalXYZ = function(poly, nIterations) {
   return new polyhedron(poly.vertices, poly.faces, poly.name);
 };
 
-
 // quick planarization
 const adjustXYZ = function(poly, nIterations) {
   if (!nIterations) { nIterations = 1; }
@@ -7155,6 +7188,11 @@ const adjustXYZ = function(poly, nIterations) {
   return new polyhedron(poly.vertices, poly.faces, poly.name);
 };
 
+const spherize = function(poly) {
+  console.log(`Spherizing ${poly.name}...`);
+  poly.vertices = sphere(poly.vertices);
+  return new polyhedron(poly.vertices, poly.faces, poly.name);
+};
 
 // Polyhédronisme
 //===================================================================================================
@@ -7520,6 +7558,7 @@ const opmap = {
   "Z": triangulate,
   "C": canonicalize,
   "A": adjustXYZ,
+  "S": spherize,
 };
 //unclaimed: yihfzv
 
@@ -7568,8 +7607,8 @@ const newgeneratePoly = function(notation) {
   }
 
   // Recenter polyhedra at origin (rarely needed)
-  poly.vertices = recenter(poly.vertices, poly.edges());
-  poly.vertices = rescale(poly.vertices);
+  // poly.vertices = recenter(poly.vertices, poly.edges());
+  // poly.vertices = rescale(poly.vertices);
 
   // Color the faces of the polyhedra for display
   poly = paintPolyhedron(poly);
@@ -7604,8 +7643,8 @@ const _2d_y_offset = CANVAS_HEIGHT/2;
 //let PALETTE;
 const BG_CLEAR = true; // clear background or colored?
 const BG_COLOR = "rgba(255,255,255,1.0)"; // background color
-let COLOR_METHOD = "signature"; // "area", "edges"
-let COLOR_SENSITIVITY = 2; // color sensitivity to variation 
+let COLOR_METHOD = "inradius"; // "area", "edges", "signature"
+let COLOR_SENSITIVITY = 6; // color sensitivity to variation
                            // in congruence signature or planar area
 const ctx_linewidth = 0.5; // for outline of faces
 let PaintMode = "fillstroke";
@@ -7621,11 +7660,11 @@ let LastSphVec = [1, 0, 0];
 const DEFAULT_RECIPES = [
   "C2dakD", "oC20kkkT", "kn4C40A0dA4", "opD",
   "lT", "lK5oC", "knD", "dn6x4K5bT", "oox4P7",
-  "qqJ37", "aobD", "qaxI"];
+  "qqJ37", "aobD", "qaxI", "SdStSuSkD", "SASuSASuI"];
 
 // File-saving objects used to export txt/canvas-png
 const saveText = function(text, filename) {
-  const blb = new Blob([text], 
+  const blb = new Blob([text],
     {type: `text/plain;charset=${document.characterSet}`});
   saveAs(blb, filename);
 }
@@ -7653,7 +7692,7 @@ const setlink = function() {
   let link = location.protocol + '//' + location.host + location.pathname;
   link += `?recipe=${encodeURIComponent(specs[0])}`;
   if (PALETTE !== rwb_palette) {
-    link += `&palette=${encodeURIComponent(PALETTE.reduce((x,y)=> x+" "+y))}`;
+    link += `&palette=${encodeURIComponent(PALETTE.reduce((x,y) => x+" "+y))}`;
   }
   $("#link").attr("href", link);
 };
@@ -7679,14 +7718,14 @@ const init = function() {
     ctx.fillStyle = BG_COLOR;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   }
-    
+
   const exp = $('#expandcollapse');
   exp.click(function() {
     if (/minus/.test(exp.attr('src'))) {  // Contains 'minus'
       $('#morestats').hide();
       exp.attr('src', 'media/plus.png');
     } else {
-      $('#morestats').show();      
+      $('#morestats').show();
       exp.attr('src', 'media/minus.png');
     }
   });
@@ -7713,8 +7752,8 @@ const drawpoly = function(poly, tvec) {
 
 
   // rotate poly in 3d
-  const oldxyz = _.map(poly.vertices, x=> x);
-  poly.vertices = _.map(poly.vertices, x=> mv3(globRotM,x));
+  const oldxyz = _.map(poly.vertices, x => x);
+  poly.vertices = _.map(poly.vertices, x => mv3(globRotM,x));
 
   // z sort faces
   sortfaces(poly);
@@ -7736,22 +7775,22 @@ const drawpoly = function(poly, tvec) {
     let clr = palette(poly.face_classes[fno]);
 
     // shade based on simple cosine illumination factor
-    const face_verts = face.map((v)=>poly.vertices[v])
+    const face_verts = face.map((v) => poly.vertices[v])
     //TODO: these magic illumination parameters should be global constants or parameters
     const illum = dot(normal(face_verts), unit([1, -1, 0]));
     clr = mult((((illum / 2.0) + 0.5) * 0.7) + 0.3, clr);
 
     if ((PaintMode === "fill") || (PaintMode === "fillstroke")) {
-      ctx.fillStyle = 
+      ctx.fillStyle =
         `rgba(${round(clr[0]*255)}, ${round(clr[1]*255)}, ${round(clr[2]*255)}, ${1.0})`;
       ctx.fill();
       // make cartoon stroke (=black) / realistic stroke an option (=below)
-      ctx.strokeStyle = 
+      ctx.strokeStyle =
         `rgba(${round(clr[0]*255)}, ${round(clr[1]*255)}, ${round(clr[2]*255)}, ${1.0})`;
       ctx.stroke();
     }
     if (PaintMode === "fillstroke") {
-      ctx.fillStyle = 
+      ctx.fillStyle =
         `rgba(${round(clr[0]*255)}, ${round(clr[1]*255)}, ${round(clr[2]*255)}, ${1.0})`;
       ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.3)";  // light lines, less cartoony, more render-y
@@ -7807,10 +7846,10 @@ $( function() { //wait for page to load
     PALETTE = urlParams["palette"].split(/\s+/g);
     setlink();
   }
-  $("#palette").val( PALETTE.reduce((x,y)=> x+" "+y) );
+  $("#palette").val( PALETTE.reduce((x,y) => x+" "+y) );
 
   // construct the polyhedra from spec
-  globPolys = _.map(specs, x=> newgeneratePoly(x));
+  globPolys = _.map(specs, x => newgeneratePoly(x));
   updateStats();
 
   // draw it
@@ -7824,7 +7863,7 @@ $( function() { //wait for page to load
   $("#spec").change(function(e) {
     // only allow one recipe for now
     specs = $("#spec").val().split(/\s+/g).slice(0, 2);
-    globPolys = _.map(specs, x=> newgeneratePoly(x));
+    globPolys = _.map(specs, x => newgeneratePoly(x));
     updateStats();
     //animateShape()
     setlink();
@@ -7866,16 +7905,16 @@ $( function() { //wait for page to load
     LastMouseX = e.clientX-$(this).offset().left;
     LastMouseY = e.clientY-($(this).offset().top-$(window).scrollTop());
     // calculate inverse projection of point to sphere
-    const tmpvec = invperspT(LastMouseX, LastMouseY, 
-                             _2d_x_offset, _2d_y_offset, 
-                             persp_z_max, persp_z_min, 
+    const tmpvec = invperspT(LastMouseX, LastMouseY,
+                             _2d_x_offset, _2d_y_offset,
+                             persp_z_max, persp_z_min,
                              persp_ratio, perspective_scale);
     // quick NaN check
     if ((tmpvec[0]*tmpvec[1]*tmpvec[2]*0) === 0) {
       LastSphVec = tmpvec;
     }
     // copy last transform state
-    globLastRotM = clone(globRotM); 
+    globLastRotM = clone(globRotM);
   });
   $("#poly").mouseup(function(e){
     e.preventDefault();
@@ -7896,7 +7935,7 @@ $( function() { //wait for page to load
         persp_ratio,perspective_scale);
 
       // quick NaN check
-      if (((SphVec[0]*SphVec[1]*SphVec[2]*0) === 0) && 
+      if (((SphVec[0]*SphVec[1]*SphVec[2]*0) === 0) &&
            ((LastSphVec[0]*LastSphVec[1]*LastSphVec[2]*0) === 0)) {
         globRotM = mm3(getVec2VecRotM(LastSphVec, SphVec), globLastRotM);
       }
@@ -7915,7 +7954,7 @@ $( function() { //wait for page to load
     PaintMode = "fill";
     drawShape();
   });
-  
+
   $("#fillandstroke").click(function(e) {
     PaintMode = "fillstroke";
     drawShape();
@@ -7925,7 +7964,7 @@ $( function() { //wait for page to load
     globRotM = vec_rotm(PI/2,0,1,0);
     drawShape();
   });
-  
+
   $("#toprot").click(function(e) {
     globRotM = vec_rotm(PI/2,1,0,0);
     drawShape();

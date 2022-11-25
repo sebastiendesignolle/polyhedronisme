@@ -79,6 +79,7 @@ const opmap = {
   "Z": triangulate,
   "C": canonicalize,
   "A": adjustXYZ,
+  "S": spherize,
 };
 //unclaimed: yihfzv
 
@@ -127,8 +128,8 @@ const newgeneratePoly = function(notation) {
   }
 
   // Recenter polyhedra at origin (rarely needed)
-  poly.vertices = recenter(poly.vertices, poly.edges());
-  poly.vertices = rescale(poly.vertices);
+  // poly.vertices = recenter(poly.vertices, poly.edges());
+  // poly.vertices = rescale(poly.vertices);
 
   // Color the faces of the polyhedra for display
   poly = paintPolyhedron(poly);

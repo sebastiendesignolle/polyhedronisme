@@ -31,7 +31,7 @@
 // adjusts vertices on edges such that each edge is tangent to an origin sphere
 const tangentify = function(vertices, edges) {
   // hack to improve convergence
-  const STABILITY_FACTOR = 0.1; 
+  const STABILITY_FACTOR = 0.1;
   // copy vertices
   const newVs = copyVecArray(vertices);
   for (let e of edges) {
@@ -51,7 +51,7 @@ const recenter = function(vertices, edges) {
   const edgecenters = edges.map(([a, b])=>tangentPoint(vertices[a], vertices[b]));
   let polycenter = [0, 0, 0];
   // sum centers to find center of gravity
-  for (let v of edgecenters) { 
+  for (let v of edgecenters) {
     polycenter = add(polycenter, v);
   }
   polycenter = mult(1/edges.length, polycenter);
@@ -67,6 +67,12 @@ const rescale = function(vertices) {
   return _.map(vertices, x=>[s*x[0], s*x[1], s*x[2]]);
 };
 
+// rescales all vertices of polyhedron to 1
+const sphere = function(vertices) {
+  const polycenter = [0, 0, 0];
+  return _.map(vertices, x=>[x[0]/mag(x), x[1]/mag(x), x[2]/mag(x)]);
+};
+
 // adjusts vertices in each face to improve its planarity
 const planarize = function(vertices, faces) {
   let v;
@@ -80,7 +86,7 @@ const planarize = function(vertices, faces) {
       n = mult(-1.0, n);
     }
     for (v of f) {  // project (vertex - centroid) onto normal, subtract off this component
-      newVs[v] = add(newVs[v], 
+      newVs[v] = add(newVs[v],
                      mult(dot(mult(STABILITY_FACTOR, n), sub(c, vertices[v])), n));
     }
   }
@@ -89,7 +95,7 @@ const planarize = function(vertices, faces) {
 
 // combines above three constraint adjustments in iterative cycle
 const canonicalize = function(poly, Niter) {
-  if (!Niter) { 
+  if (!Niter) {
     Niter = 1;
   }
   console.log(`Canonicalizing ${poly.name}...`);
@@ -102,7 +108,7 @@ const canonicalize = function(poly, Niter) {
     newVs = tangentify(newVs, edges);
     newVs = recenter(newVs, edges);
     newVs = planarize(newVs, faces);
-    maxChange = _.max(_.map(_.zip(newVs, oldVs), 
+    maxChange = _.max(_.map(_.zip(newVs, oldVs),
                             ([x, y])=>mag(sub(x, y))
                             ));
     if (maxChange < 1e-8) {
@@ -172,7 +178,6 @@ const canonicalXYZ = function(poly, nIterations) {
   return new polyhedron(poly.vertices, poly.faces, poly.name);
 };
 
-
 // quick planarization
 const adjustXYZ = function(poly, nIterations) {
   if (!nIterations) { nIterations = 1; }
@@ -188,4 +193,9 @@ const adjustXYZ = function(poly, nIterations) {
   return new polyhedron(poly.vertices, poly.faces, poly.name);
 };
 
+const spherize = function(poly) {
+  console.log(`Spherizing ${poly.name}...`);
+  poly.vertices = sphere(poly.vertices);
+  return new polyhedron(poly.vertices, poly.faces, poly.name);
+};
 

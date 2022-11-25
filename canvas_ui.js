@@ -25,8 +25,8 @@ const _2d_y_offset = CANVAS_HEIGHT/2;
 //let PALETTE;
 const BG_CLEAR = true; // clear background or colored?
 const BG_COLOR = "rgba(255,255,255,1.0)"; // background color
-let COLOR_METHOD = "signature"; // "area", "edges"
-let COLOR_SENSITIVITY = 2; // color sensitivity to variation 
+let COLOR_METHOD = "inradius"; // "area", "edges", "signature"
+let COLOR_SENSITIVITY = 6; // color sensitivity to variation
                            // in congruence signature or planar area
 const ctx_linewidth = 0.5; // for outline of faces
 let PaintMode = "fillstroke";
@@ -42,11 +42,11 @@ let LastSphVec = [1, 0, 0];
 const DEFAULT_RECIPES = [
   "C2dakD", "oC20kkkT", "kn4C40A0dA4", "opD",
   "lT", "lK5oC", "knD", "dn6x4K5bT", "oox4P7",
-  "qqJ37", "aobD", "qaxI"];
+  "qqJ37", "aobD", "qaxI", "SdStSuSkD", "SASuSASuI"];
 
 // File-saving objects used to export txt/canvas-png
 const saveText = function(text, filename) {
-  const blb = new Blob([text], 
+  const blb = new Blob([text],
     {type: `text/plain;charset=${document.characterSet}`});
   saveAs(blb, filename);
 }
@@ -74,7 +74,7 @@ const setlink = function() {
   let link = location.protocol + '//' + location.host + location.pathname;
   link += `?recipe=${encodeURIComponent(specs[0])}`;
   if (PALETTE !== rwb_palette) {
-    link += `&palette=${encodeURIComponent(PALETTE.reduce((x,y)=> x+" "+y))}`;
+    link += `&palette=${encodeURIComponent(PALETTE.reduce((x,y) => x+" "+y))}`;
   }
   $("#link").attr("href", link);
 };
@@ -100,14 +100,14 @@ const init = function() {
     ctx.fillStyle = BG_COLOR;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   }
-    
+
   const exp = $('#expandcollapse');
   exp.click(function() {
     if (/minus/.test(exp.attr('src'))) {  // Contains 'minus'
       $('#morestats').hide();
       exp.attr('src', 'media/plus.png');
     } else {
-      $('#morestats').show();      
+      $('#morestats').show();
       exp.attr('src', 'media/minus.png');
     }
   });
@@ -134,8 +134,8 @@ const drawpoly = function(poly, tvec) {
 
 
   // rotate poly in 3d
-  const oldxyz = _.map(poly.vertices, x=> x);
-  poly.vertices = _.map(poly.vertices, x=> mv3(globRotM,x));
+  const oldxyz = _.map(poly.vertices, x => x);
+  poly.vertices = _.map(poly.vertices, x => mv3(globRotM,x));
 
   // z sort faces
   sortfaces(poly);
@@ -157,22 +157,22 @@ const drawpoly = function(poly, tvec) {
     let clr = palette(poly.face_classes[fno]);
 
     // shade based on simple cosine illumination factor
-    const face_verts = face.map((v)=>poly.vertices[v])
+    const face_verts = face.map((v) => poly.vertices[v])
     //TODO: these magic illumination parameters should be global constants or parameters
     const illum = dot(normal(face_verts), unit([1, -1, 0]));
     clr = mult((((illum / 2.0) + 0.5) * 0.7) + 0.3, clr);
 
     if ((PaintMode === "fill") || (PaintMode === "fillstroke")) {
-      ctx.fillStyle = 
+      ctx.fillStyle =
         `rgba(${round(clr[0]*255)}, ${round(clr[1]*255)}, ${round(clr[2]*255)}, ${1.0})`;
       ctx.fill();
       // make cartoon stroke (=black) / realistic stroke an option (=below)
-      ctx.strokeStyle = 
+      ctx.strokeStyle =
         `rgba(${round(clr[0]*255)}, ${round(clr[1]*255)}, ${round(clr[2]*255)}, ${1.0})`;
       ctx.stroke();
     }
     if (PaintMode === "fillstroke") {
-      ctx.fillStyle = 
+      ctx.fillStyle =
         `rgba(${round(clr[0]*255)}, ${round(clr[1]*255)}, ${round(clr[2]*255)}, ${1.0})`;
       ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.3)";  // light lines, less cartoony, more render-y
@@ -228,10 +228,10 @@ $( function() { //wait for page to load
     PALETTE = urlParams["palette"].split(/\s+/g);
     setlink();
   }
-  $("#palette").val( PALETTE.reduce((x,y)=> x+" "+y) );
+  $("#palette").val( PALETTE.reduce((x,y) => x+" "+y) );
 
   // construct the polyhedra from spec
-  globPolys = _.map(specs, x=> newgeneratePoly(x));
+  globPolys = _.map(specs, x => newgeneratePoly(x));
   updateStats();
 
   // draw it
@@ -245,7 +245,7 @@ $( function() { //wait for page to load
   $("#spec").change(function(e) {
     // only allow one recipe for now
     specs = $("#spec").val().split(/\s+/g).slice(0, 2);
-    globPolys = _.map(specs, x=> newgeneratePoly(x));
+    globPolys = _.map(specs, x => newgeneratePoly(x));
     updateStats();
     //animateShape()
     setlink();
@@ -287,16 +287,16 @@ $( function() { //wait for page to load
     LastMouseX = e.clientX-$(this).offset().left;
     LastMouseY = e.clientY-($(this).offset().top-$(window).scrollTop());
     // calculate inverse projection of point to sphere
-    const tmpvec = invperspT(LastMouseX, LastMouseY, 
-                             _2d_x_offset, _2d_y_offset, 
-                             persp_z_max, persp_z_min, 
+    const tmpvec = invperspT(LastMouseX, LastMouseY,
+                             _2d_x_offset, _2d_y_offset,
+                             persp_z_max, persp_z_min,
                              persp_ratio, perspective_scale);
     // quick NaN check
     if ((tmpvec[0]*tmpvec[1]*tmpvec[2]*0) === 0) {
       LastSphVec = tmpvec;
     }
     // copy last transform state
-    globLastRotM = clone(globRotM); 
+    globLastRotM = clone(globRotM);
   });
   $("#poly").mouseup(function(e){
     e.preventDefault();
@@ -317,7 +317,7 @@ $( function() { //wait for page to load
         persp_ratio,perspective_scale);
 
       // quick NaN check
-      if (((SphVec[0]*SphVec[1]*SphVec[2]*0) === 0) && 
+      if (((SphVec[0]*SphVec[1]*SphVec[2]*0) === 0) &&
            ((LastSphVec[0]*LastSphVec[1]*LastSphVec[2]*0) === 0)) {
         globRotM = mm3(getVec2VecRotM(LastSphVec, SphVec), globLastRotM);
       }
@@ -336,7 +336,7 @@ $( function() { //wait for page to load
     PaintMode = "fill";
     drawShape();
   });
-  
+
   $("#fillandstroke").click(function(e) {
     PaintMode = "fillstroke";
     drawShape();
@@ -346,7 +346,7 @@ $( function() { //wait for page to load
     globRotM = vec_rotm(PI/2,0,1,0);
     drawShape();
   });
-  
+
   $("#toprot").click(function(e) {
     globRotM = vec_rotm(PI/2,1,0,0);
     drawShape();
