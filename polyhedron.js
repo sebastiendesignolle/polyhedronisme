@@ -249,14 +249,14 @@ class polyhedron {
   // informative string
   data() {
     const nEdges = (this.faces.length + this.vertices.length) - 2; // E = V + F - 2
-    return `${this.faces.length} faces, ${nEdges} edges, ${this.vertices.length} vertices (${this.vertices.length/2})`;
+    return `${this.faces.length} faces, ${nEdges} edges, ${this.vertices.length} vertices`;
   }
 
   moreData() {
     // return `min edge length ${this.minEdgeLength().toPrecision(4)}<br>` +
            // `min face radius ${this.minFaceRadius().toPrecision(4)}<br>` +
            // `polyhedron center ${this.magCenter().toPrecision(4)}<br>` +
-    return `inradius ${this.inradius().toPrecision(6)} (${(cos(PI/(sqrt(2*this.vertices.length)))**2).toPrecision(6)})`;
+    return `inradius ${this.inradius().toPrecision(6)}`;
   }
 
   minEdgeLength() {
